@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test di Ragionamento Logico</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Stile da totale.html */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* --- SFONDO DA totale.html --- */
+            background-image: url('einstein.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+        /* Stili per le forme dei puzzle da totale.html */
+        .puzzle-shape {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .shape-circle {
+            width: 70%;
+            height: 70%;
+            border-radius: 50%;
+        }
+        .shape-square {
+            width: 70%;
+            height: 70%;
+        }
+        .shape-triangle {
+            width: 0;
+            height: 0;
+            border-left: 30px solid transparent;
+            border-right: 30px solid transparent;
+            border-bottom: 50px solid;
+        }
+        .option-card {
+            transition: all 0.2s ease-in-out;
+            /* Stili base per visibilità (da musicale.html) */
+            border: 2px solid #4B5563; 
+            background-color: #374151; 
+        }
+        .option-card:hover {
+            transform: scale(1.05);
+            border-color: #3b82f6; /* blue-500 (da totale.html) */
+        }
+        
+        /* Classe 'hidden' per la logica JS (da musicale.html) */
+        .hidden {
+          display: none;
+        }
+
+        /* Stile per il pulsante della musica (da musicale.html) */
+        #music-toggle-button {
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          width: 50px;
+          height: 50px;
+          background-color: rgba(40, 40, 40, 0.8);
+          backdrop-filter: blur(5px);
+          color: white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(100, 100, 100, 0.5);
+          cursor: pointer;
+          z-index: 50;
+          transition: background-color 0.2s;
+        }
+        #music-toggle-button:hover {
+          background-color: rgba(60, 60, 60, 0.9);
+        }
+        #music-toggle-button svg {
+          width: 24px;
+          height: 24px;
+        }
+        
+    </style>
+</head>
+<body class="text-white min-h-screen flex items-center justify-center p-4">
+
+    <div id="app-container" class="w-full max-w-2xl mx-auto bg-gray-900/80 backdrop-blur-md rounded-2xl shadow-2xl p-6 md:p-10 transition-all duration-500 border border-gray-700/50">
+
+        <div id="start-screen">
+            <h1 class="text-3xl md:text-4xl font-bold text-center mb-4 text-blue-400">Testa la tua Intelligenza!</h1>
+            <p class="text-gray-300 text-center mb-6 text-base">
+                Esegui il test e scopri <strong>qual è il tuo punteggio QI.</strong> <br> Simulazione con alcuna validità psicometrica.<br>
+                Non è affiliato al Mensa, né misura un quoziente intellettivo.
+            </p>
+            <p class="text-gray-400 text-center mb-8 text-base">
+                Completa la sequenza o trova l'elemento mancante.<br>
+                La musica stimolante creata con AI aumenterà i tuoi poteri!. 
+            </p>
+            <button id="start-button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition duration-300 shadow-lg">
+                Inizia il Test
+            </button>
+        </div>
+
+        <div id="quiz-screen" class="hidden">
+            <div class="mb-6 flex justify-between items-center">
+                <h2 class="text-xl font-semibold text-blue-300">Domanda <span id="question-number">1</span> di <span id="total-questions">33</span></h2>
+                <div class="text-lg text-gray-300">Punteggio: <span id="current-score">0</span></div>
+            </div>
+
+            <div id="question-container" class="mb-8 p-4 bg-gray-900 rounded-lg border border-gray-700 min-h-[200px] flex items-center justify-center text-center">
+                </div>
+
+            <div id="options-container" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            </div>
+        </div>
+
+        <div id="result-screen" class="hidden text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-center mb-2 text-blue-400">Test Completato</h1>
+            
+            <div id="result-text" class="text-2xl text-white mb-2">
+                </div>
+            
+            <p id="result-feedback" class="text-xl text-yellow-300 mb-4">
+                </p>
+
+            <div class="my-4">
+                <h3 class="text-xl font-semibold text-blue-300 mb-2">Simulazione Punteggio (Non-Scientifico)</h3>
+                <p id="simulated-iq-score" class="text-4xl font-bold text-white mb-2">---</p>
+                
+                <div class="w-full max-w-lg mx-auto p-4 bg-gray-900 rounded-lg">
+                    <svg id="gauss-chart" viewBox="0 0 100 60" preserveAspectRatio="xMidYMid meet" class="w-full">
+                        <line x1="5" x2="95" y1="50" y2="50" stroke="#6b7280" stroke-width="0.5"></line>
+                        <text x="15" y="55" font-size="5" fill="#9ca3af" text-anchor="middle">70</text>
+                        <text x="32.5" y="55" font-size="5" fill="#9ca3af" text-anchor="middle">85</text>
+                        <text x="50" y="55" font-size="6" fill="#e5e7eb" font-weight="bold" text-anchor="middle">100</text>
+                        <text x="67.5" y="55" font-size="5" fill="#9ca3af" text-anchor="middle">115</text>
+                        <text x="85" y="55" font-size="5" fill="#9ca3af" text-anchor="middle">130</text>
+
+                        <path d="M 5,50 C 15,50 20,10 50,10 C 80,10 85,50 95,50" stroke="#3b82f6" stroke-width="1.5" fill="none" stroke-linecap="round"></path>
+
+                        <line id="marker-line" x1="50" x2="50" y1="12" y2="48" stroke="#facc15" stroke-width="1" stroke-dasharray="2 1"></line>
+                        <text id="marker-text" x="50" y="8" font-size="6" fill="#facc15" text-anchor="middle" font-weight="bold">--</text>
+                    </svg>
+                </div>
+            </div>
+            <p class="text-gray-400 mb-6">
+                <strong>Ricorda:</strong> questo punteggio è solo il risultato di questa simulazione.
+                <strong class="text-red-400">NON è un punteggio QI</strong> e non ha alcuna validità scientifica o psicometrica.
+            </p>
+            <button id="restart-button" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition duration-300 shadow-lg">
+                Riprova
+            </button>
+        </div>
+
+    </div>
+
+    <button id="music-toggle-button" aria-label="Attiva/Disattiva musica">
+        <svg id="icon-sound-on" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+        </svg>
+        <svg id="icon-sound-off" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 9.75L19.5 12m0 0l2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.757 3.63 8.25 4.51 8.25H6.75z" />
+        </svg>
+    </button>
+
+    <audio id="background-music" src="audio.mp3" loop preload="auto"></audio>
+    <script>
+        // --- Audio Context per i suoni (da totale.html) ---
+        let audioCtx;
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.warn("Web Audio API is not supported in this browser");
+        }
+
+        /**
+         * Genera un suono per la risposta corretta o errata. (da totale.html)
+         * @param {boolean} isCorrect - true per suono "felice", false per suono "triste".
+         */
+        function playSound(isCorrect) {
+            if (!audioCtx) return; // Non fare nulla se l'audio non è supportato
+
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.05); // Fade in
+            
+            if (isCorrect) {
+                // Suono "felice": un tono acuto che sale
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+                oscillator.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3); // Fade out
+                oscillator.start(audioCtx.currentTime);
+                oscillator.stop(audioCtx.currentTime + 0.3);
+            } else {
+                // Suono "triste": un tono grave che scende
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+                oscillator.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4); // Fade out
+                oscillator.start(audioCtx.currentTime);
+                oscillator.stop(audioCtx.currentTime + 0.4);
+            }
+        }
+
+
+        // --- Dati dei Quesiti (TUTTE LE 33 DOMANDE DA totale.html) ---
+        const quizData = [
+            {
+                // Quesito 1: Progressione di riempimento (CORRETTO)
+                questionHtml: `
+                    <div class="flex items-center justify-center space-x-8">
+                        <div class="puzzle-shape"><div class="w-16 h-16 rounded-full border-2 border-yellow-400"></div></div>
+                        <div class="puzzle-shape"><div class="w-16 h-16 rounded-full border-2 border-yellow-400" style="background: linear-gradient(to right, #facc15 50%, transparent 50%);"></div></div>
+                        <div class="puzzle-shape"><div class="w-16 h-16 rounded-full bg-yellow-400"></div></div>
+                        <div class="text-4xl text-gray-500 p-2">?</div>
+                    </div>`,
+                optionsHtml: [
+                    `<div class="puzzle-shape"><div class="w-16 h-16 border-2 border-yellow-400"></div></div>`, 
+                    // Metà
+                    `<div class="puzzle-shape"><div class="w-16 h-16 rounded-full border-2 border-yellow-400" style="background: linear-gradient(to right, #facc15 50%, transparent 50%);"></div></div>`, 
+                    // Pieno
+                    `<div class="puzzle-shape"><div class="w-16 h-16 rounded-full bg-yellow-400"></div></div>`,
+                    // (Risposta) Vuoto di nuovo
+                    `<div class="puzzle-shape"><div class="w-16 h-16 rounded-full border-2 border-yellow-400"></div></div>`, 
+                    // Metà dall'altro lato
+                    `<div class="puzzle-shape"><div class="w-16 h-16 rounded-full border-2 border-yellow-400" style="background: linear-gradient(to left, #facc15 50%, transparent 50%);"></div></div>`,
+                    // Un quadrato
+                    `<div class="puzzle-shape"><div class="w-16 h-16 bg-yellow-400"></div></div>`
+                ],
+                correctAnswer: 3 // Il ciclo ricomincia: Vuoto, Metà, Pieno, Vuoto...
+            },
+            {
+                // Quesito 5: Posizione
+                questionHtml: `
+                    <div class="flex items-center justify-center space-x-8">
+                        <div class="p-2 border border-gray-600 rounded-md w-20 h-20 relative"><div class="w-4 h-4 bg-red-500 rounded-full absolute top-1 left-1"></div></div>
+                        <div class="p-2 border border-gray-600 rounded-md w-20 h-20 relative"><div class="w-4 h-4 bg-red-500 rounded-full absolute top-1 right-1"></div></div>
+                        <div class="p-2 border border-gray-600 rounded-md w-20 h-20 relative"><div class="w-4 h-4 bg-red-500 rounded-full absolute bottom-1 right-1"></div></div>
+                        <div class="text-4xl text-gray-500 p-2">?</div>
+                    </div>`,
+                optionsHtml: [
+                    `<div class="puzzle-shape w-20 h-20 relative"><div class="w-4 h-4 bg-red-500 rounded-full absolute top-1 left-1"></div></div>`, // Alto-Sx
+                    `<div class="puzzle-shape w-20 h-20 relative"><div class="w-4 h-4 bg-red-500 rounded-full absolute top-1 right-1"></div></div>`, // Alto-Dx
+                    `<div class="puzzle-shape w-20 h-20 relative"><div class="w-4 h-4 bg-red-500 rounded-full absolute bottom-1 right-1"></div></div>`, // Basso-Dx
+                    `<div class="puzzle-shape w-20 h-20 relative"><div class="w-4 h-4 bg-red-500 rounded-full absolute bottom-1 left-1"></div></div>`, // Basso-Sx (Corretta)
+                    `<div class="puzzle-shape w-20 h-20 relative"><div class="w-4 h-4 bg-red-500 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div></div>`, // Centro
+                    `<div class="puzzle-shape w-20 h-20 relative"></div>` // Vuoto
+                ],
+                correctAnswer: 3 // Basso-Sinistra
+            },
+            // --- Nuove Domande Aggiunte ---
+            {
+                // Quesito 6: Logica "Odd one out" (Trova l'intruso)
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Trova l'elemento che non appartiene al gruppo:</h3><div class="flex items-center justify-center space-x-4">
+                    <div class="p-2 border border-gray-600 rounded-md w-16 h-16"><div class="shape-square bg-red-500"></div></div>
+                    <div class="p-2 border border-gray-600 rounded-md w-16 h-16"><div class="shape-circle bg-red-500"></div></div>
+                    <div class="p-2 border border-gray-600 rounded-md w-16 h-16"><div class="puzzle-shape"><div class="shape-triangle border-b-red-500"></div></div></div>
+                    <div class="p-2 border border-gray-600 rounded-md w-16 h-16"><div class="shape-square bg-blue-500"></div></div>
+                </div>`,
+                optionsHtml: [
+                    `<div class="puzzle-shape w-16 h-16"><div class="shape-square bg-red-500"></div></div>`, // A
+                    `<div class="puzzle-shape w-16 h-16"><div class="shape-circle bg-red-500"></div></div>`, // B
+                    `<div class="puzzle-shape w-16 h-16"><div class="shape-triangle border-b-red-500"></div></div>`, // C
+                    `<div class="puzzle-shape w-16 h-16"><div class="shape-square bg-blue-500"></div></div>`, // D
+                    `<span class="text-gray-400">A e B</span>`,
+                    `<span class="text-gray-400">Tutti</span>`
+                ],
+                correctAnswer: 3 // È l'unico blu
+            },
+            {
+                // Quesito 7: Analogia (A sta a B come C sta a ?)
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Trova l'analogia:</h3><div class="flex items-center justify-center space-x-6">
+                    <div class="flex items-center space-x-2"><div class="w-12 h-12 bg-gray-300"></div> <span class="text-2xl">→</span> <div class="w-12 h-12 bg-gray-300 rounded-full"></div></div>
+                    <div class="text-2xl text-gray-500">::</div>
+                    <div class="flex items-center space-x-2"><div class="w-0 h-0 border-l-[24px] border-r-[24px] border-b-[40px] border-l-transparent border-r-transparent border-b-gray-300"></div> <span class="text-2xl">→</span> <div class="text-4xl text-gray-500">?</div></div>
+                </div>`,
+                optionsHtml: [
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-gray-300"></div></div>`, // Quadrato
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-gray-300 rounded-full"></div></div>`, // Cerchio
+                    `<div class="puzzle-shape"><div class="w-12 h-12 rounded-full border-2 border-gray-300"></div></div>`, // Cerchio vuoto
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-gray-300" style="clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div></div>`, // Triangolo (già c'è)
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-gray-300 rounded-lg" style="transform: rotate(45deg);"></div></div>`, // Rombo
+                    `<div class="puzzle-shape"><div class="w-0 h-0 border-l-[24px] border-r-[24px] border-b-[40px] border-l-transparent border-r-transparent border-b-gray-300" style="transform: rotate(180deg);"></div></div>` // Triangolo rovesciato
+                ],
+                correctAnswer: 1 // La logica è "da spigoli a curvo". Quadrato -> Cerchio. Triangolo -> (forma curva). Opzione più logica: Cerchio.
+            },
+            {
+                // Quesito 8: Addizione di elementi (CORRETTO)
+                questionHtml: `<div class="flex items-center justify-center space-x-6">
+                    <div class="p-2 border border-gray-600 rounded-md w-20 h-20 relative"><div class="w-full h-1 bg-green-500 absolute top-1/2 -translate-y-1/2"></div></div>
+                    <div class="text-4xl text-gray-500">+</div>
+                    <div class="p-2 border border-gray-600 rounded-md w-20 h-20 relative"><div class="w-1 h-full bg-green-500 absolute left-1/2 -translate-x-1/2"></div></div>
+                    <div class="text-4xl text-gray-500">=</div>
+                    <div class="text-4xl text-gray-500 p-2">?</div>
+                </div>`,
+                optionsHtml: [
+                    // Croce (Corretta)
+                    `<div class="p-2 border border-gray-600 rounded-md w-20 h-20 relative"><div class="w-full h-1 bg-green-500 absolute top-1/2 -translate-y-1/2"></div><div class="w-1 h-full bg-green-500 absolute left-1/2 -translate-x-1/2"></div></div>`,
+                    // Solo Orizzontale
+                    `<div class="p-2 border border-gray-600 rounded-md w-20 h-20 relative"><div class="w-full h-1 bg-green-500 absolute top-1/2 -translate-y-1/2"></div></div>`,
+                    // Solo Verticale
+                    `<div class="p-2 border border-gray-600 rounded-md w-20 h-20 relative"><div class="w-1 h-full bg-green-500 absolute left-1/2 -translate-x-1/2"></div></div>`,
+                    // Diagonale
+                    `<div class="p-2 border border-gray-600 rounded-md w-20 h-20 relative"><div class="w-full h-1 bg-green-500 absolute top-1/2 -translate-y-1/2 transform rotate-45"></div></div>`,
+                    // Vuoto
+                    `<div class="p-2 border border-gray-600 rounded-md w-20 h-20 relative"></div>`,
+                    // Due linee orizzontali
+                    `<div class="p-2 border border-gray-600 rounded-md w-20 h-20 relative"><div class="w-full h-1 bg-green-500 absolute top-1/4"></div><div class="w-full h-1 bg-green-500 absolute bottom-1/4"></div></div>`
+                ],
+                correctAnswer: 0 // La somma delle due linee è una croce
+            },
+             { // Q 6 (vecchio Q21)
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Quale numero completa la sequenza?</h3><div class="flex items-center justify-center space-x-4 text-3xl font-bold"><span>1</span><span>4</span><span>9</span><span>16</span><span>25</span><span class="text-gray-500">?</span></div>`,
+                optionsHtml: [`<span class="text-3xl">30</span>`, `<span class="text-3xl">32</span>`, `<span class="text-3xl">36</span>`, `<span class="text-3xl">40</span>`, `<span class="text-3xl">49</span>`, `<span class="text-3xl">50</span>`],
+                correctAnswer: 2 // Quadrati perfetti (6*6 = 36)
+            },
+            { // Q 7 (vecchio Q22)
+                questionHtml: `<div class="grid grid-cols-2 gap-2 w-32 h-32 md:w-40 md:h-40 mx-auto p-2 bg-gray-700 rounded">
+                    <div class="puzzle-shape transform rotate-0"><div class="text-4xl">L</div></div>
+                    <div class="puzzle-shape transform -rotate-90"><div class="text-4xl">L</div></div>
+                    <div class="puzzle-shape transform -rotate-180"><div class="text-4xl">L</div></div>
+                    <div class="puzzle-shape text-5xl text-gray-500">?</div>
+                </div>`,
+                optionsHtml: [
+                    // (Modificato) Rotazione 90° oraria
+                    `<div class="puzzle-shape transform rotate-90"><div class="text-4xl">L</div></div>`, 
+                    // (Modificato) Ribaltamento verticale
+                    `<div class="puzzle-shape transform scale-y-[-1]"><div class="text-4xl">L</div></div>`, 
+                    // (Corretta) Rotazione -270° antioraria
+                    `<div class="puzzle-shape transform -rotate-270"><div class="text-4xl">L</div></div>`, 
+                    // (Modificato) Lettera T
+                    `<div class="puzzle-shape"><div class="text-4xl">T</div></div>`,
+                    // (Mantenuto) Ribaltamento orizzontale
+                    `<div class="puzzle-shape transform scale-x-[-1]"><div class="text-4xl">L</div></div>`, 
+                    // (Mantenuto) Lettera F
+                    `<div class="puzzle-shape"><div class="text-4xl">F</div></div>`
+                ],
+                correctAnswer: 2 // Rotazione di 90 gradi antioraria
+            },
+            { // Q 8 (vecchio Q23)
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Trova l'intruso:</h3><div class="flex items-center justify-center space-x-4">
+                    <div class="p-2 border border-gray-600 rounded-md w-16 h-16 flex items-center justify-center"><div class="w-10 h-10 bg-red-500 rounded-full"></div></div>
+                    <div class="p-2 border border-gray-600 rounded-md w-16 h-16 flex items-center justify-center"><div class="w-10 h-10 bg-green-500 rounded-full"></div></div>
+                    <div class="p-2 border border-gray-600 rounded-md w-16 h-16 flex items-center justify-center"><div class="w-10 h-10 bg-blue-500 rounded-full"></div></div>
+                    <div class="p-2 border border-gray-600 rounded-md w-16 h-16 flex items-center justify-center"><div class="w-10 h-10 bg-red-500"></div></div>
+                </div>`,
+                optionsHtml: [
+                    `Opzione 1 (Cerchio Rosso)`,
+                    `Opzione 2 (Cerchio Verde)`,
+                    `Opzione 3 (Cerchio Blu)`,
+                    `Opzione 4 (Quadrato Rosso)`, // Corretta
+                    `Nessuno`,
+                    `Opzione 1 e 4`
+                ],
+                correctAnswer: 3 // È un quadrato, gli altri sono cerchi
+            },
+            { // Q 9 (vecchio Q24)
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Quale lettera completa la sequenza?</h3><div class="flex items-center justify-center space-x-4 text-3xl font-bold"><span>Z</span><span>Y</span><span>X</span><span>W</span><span>V</span><span class="text-gray-500">?</span></div>`,
+                optionsHtml: [`<span class="text-3xl">A</span>`, `<span class="text-3xl">S</span>`, `<span class="text-3xl">T</span>`, `<span class="text-3xl">U</span>`, `<span class="text-3xl">E</span>`, `<span class="text-3xl">O</span>`],
+                correctAnswer: 3 // Alfabeto al contrario
+            },
+            { // Q 10 (vecchio Q25)
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Analogia:</h3><div class="flex items-center justify-center space-x-6">
+                    <div class="flex items-center space-x-2"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">3</div> <span class="text-2xl">→</span> <div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">9</div></div>
+                    <div class="text-2xl text-gray-500">::</div>
+                    <div class="flex items-center space-x-2"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">4</div> <span class="text-2xl">→</span> <div class="text-4xl text-gray-500">?</div></div>
+                </div>`,
+                optionsHtml: [
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">8</div></div>`,
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">12</div></div>`,
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">16</div></div>`, // Corretta
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">20</div></div>`,
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">24</div></div>`,
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">32</div></div>`
+                ],
+                correctAnswer: 2 // Logica: N -> N*N (o N^2)
+            },
+            { // Q 11 (vecchio Q26)
+                questionHtml: `<div class="grid grid-cols-3 gap-2 w-48 h-48 md:w-60 md:h-60 mx-auto p-2 bg-gray-700 rounded">
+                    <div class="puzzle-shape"><div class="w-1 h-full bg-white"></div></div>
+                    <div class="puzzle-shape"><div class="w-full h-1 bg-white"></div></div>
+                    <div class="puzzle-shape"><div class="w-1 h-full bg-white"></div></div>
+                    <div class="puzzle-shape"><div class="w-full h-1 bg-white"></div></div>
+                    <div class="puzzle-shape"><div class="w-1 h-full bg-white"></div></div>
+                    <div class="puzzle-shape"><div class="w-full h-1 bg-white"></div></div>
+                    <div class="puzzle-shape"><div class="w-1 h-full bg-white"></div></div>
+                    <div class="puzzle-shape"><div class="w-full h-1 bg-white"></div></div>
+                    <div class="puzzle-shape text-5xl text-gray-500">?</div>
+                </div>`,
+                optionsHtml: [
+                    `<div class="puzzle-shape"><div class="w-1 h-full bg-white"></div></div>`, // Corretta
+                    `<div class="puzzle-shape"><div class="w-full h-1 bg-white"></div></div>`,
+                    `<div class="puzzle-shape"><div class="w-full h-1 bg-white"></div><div class="w-1 h-full bg-white"></div></div>`, // Croce
+                    `<div class="puzzle-shape"></div>`,
+                    `<div class="puzzle-shape"><div class="w-1/2 h-1/2 bg-white"></div></div>`,
+                    `<div class="puzzle-shape"><div class="w-1/2 h-1/2 bg-white rounded-full"></div></div>`
+                ],
+                correctAnswer: 0 // Alternanza Orizzontale / Verticale
+            },
+            { // Q 12 (vecchio Q27)
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Quale numero completa la sequenza?</h3><div class="flex items-center justify-center space-x-4 text-3xl font-bold"><span>5</span><span>10</span><span>12</span><span>24</span><span>26</span><span class="text-gray-500">?</span></div>`,
+                optionsHtml: [`<span class="text-3xl">28</span>`, `<span class="text-3xl">30</span>`, `<span class="text-3xl">40</span>`, `<span class="text-3xl">48</span>`, `<span class="text-3xl">52</span>`, `<span class="text-3xl">60</span>`],
+                correctAnswer: 4 // Logica: x2, +2, x2, +2, x2... (26 x 2 = 52)
+            },
+            { // Q 13 (vecchio Q28)
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Trova l'intruso:</h3><div class="flex items-center justify-center space-x-4 text-2xl font-bold">
+                    <div class="p-4 border border-gray-600 rounded-md">2</div>
+                    <div class="p-4 border border-gray-600 rounded-md">3</div>
+                    <div class="p-4 border border-gray-600 rounded-md">5</div>
+                    <div class="p-4 border border-gray-600 rounded-md">9</div>
+                    <div class="p-4 border border-gray-600 rounded-md">11</div>
+                </div>`,
+                optionsHtml: [`<span class="text-2xl">2</span>`, `<span class="text-2xl">3</span>`, `<span class="text-2xl">5</span>`, `<span class="text-2xl">9</span>`, `<span class="text-2xl">11</span>`, `<span class="text-2xl">Nessuno</span>`],
+                correctAnswer: 3 // 9 non è un numero primo
+            },
+            { // Q 14 (vecchio Q29)
+                questionHtml: `<div class="flex items-center justify-center space-x-6">
+                    <div class="p-2 border border-gray-600 rounded-md w-20 h-20 relative"><div class="w-4 h-4 bg-white rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div></div>
+                    <div class="p-2 border border-gray-600 rounded-md w-20 h-20 relative"><div class="w-4 h-4 bg-white rounded-full absolute top-1 left-1"></div><div class="w-4 h-4 bg-white rounded-full absolute bottom-1 right-1"></div></div>
+                    <div class="p-2 border border-gray-600 rounded-md w-20 h-20 relative"><div class="w-4 h-4 bg-white rounded-full absolute top-1 right-1"></div><div class="w-4 h-4 bg-white rounded-full absolute bottom-1 left-1"></div></div>
+                    <div class="text-4xl text-gray-500 p-2">?</div>
+                </div>`,
+                optionsHtml: [
+                    `<div class="puzzle-shape w-20 h-20 relative"><div class="w-4 h-4 bg-white rounded-full absolute top-1 left-1"></div><div class="w-4 h-4 bg-white rounded-full absolute bottom-1 right-1"></div></div>`,
+                    `<div class="puzzle-shape w-20 h-20 relative"><div class="w-4 h-4 bg-white rounded-full absolute top-1 right-1"></div><div class="w-4 h-4 bg-white rounded-full absolute bottom-1 left-1"></div></div>`,
+                    // Logica: 1(centro), 2(diag), 2(altra diag), 1(centro)
+                    `<div class="puzzle-shape w-20 h-20 relative"><div class="w-4 h-4 bg-white rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div></div>`, // Corretta
+                    `<div class="puzzle-shape w-20 h-20 relative"><div class="w-4 h-4 bg-white rounded-full absolute top-1 left-1"></div><div class="w-4 h-4 bg-white rounded-full absolute top-1 right-1"></div><div class="w-4 h-4 bg-white rounded-full absolute bottom-1 left-1"></div><div class="w-4 h-4 bg-white rounded-full absolute bottom-1 right-1"></div></div>`, // Tutti 4 angoli
+                    `<div class="puzzle-shape w-20 h-20 relative"></div>`,
+                    `<div class="puzzle-shape w-20 h-20 relative"><div class="w-4 h-4 bg-white rounded-full absolute top-1 left-1"></div></div>`
+                ],
+                correctAnswer: 2 // Ciclo A, B, C, A...
+            },
+            { // Q 15 (vecchio Q30)
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Quale numero completa la sequenza?</h3><div class="flex items-center justify-center space-x-4 text-3xl font-bold"><span>1</span><span>10</span><span>2</span><span>9</span><span>3</span><span class="text-gray-500">?</span></div>`,
+                optionsHtml: [`<span class="text-3xl">4</span>`, `<span class="text-3xl">5</span>`, `<span class="text-3xl">8</span>`, `<span class="text-3xl">11</span>`, `<span class="text-3xl">12</span>`, `<span class="text-3xl">20</span>`],
+                correctAnswer: 2 // Due sequenze alternate: (1, 2, 3) e (10, 9, 8)
+            },
+            { // Q 16 (vecchio Q31)
+                questionHtml: `<div class="grid grid-cols-2 gap-2 w-32 h-32 md:w-40 md:h-40 mx-auto p-2 bg-gray-700 rounded">
+                    <div class="puzzle-shape"><div class="shape-square bg-red-500"></div></div>
+                    <div class="puzzle-shape"><div class="shape-circle bg-red-500"></div></div>
+                    <div class="puzzle-shape"><div class="shape-square bg-blue-500"></div></div>
+                    <div class="puzzle-shape text-5xl text-gray-500">?</div>
+                </div>`,
+                optionsHtml: [
+                    `<div class="puzzle-shape"><div class="shape-square bg-blue-500"></div></div>`,
+                    `<div class="puzzle-shape"><div class="shape-circle bg-blue-500"></div></div>`, // Corretta
+                    `<div class="puzzle-shape"><div class="shape-square bg-red-500"></div></div>`,
+                    `<div class="puzzle-shape"><div class="shape-circle bg-red-500"></div></div>`,
+                    `<div class="puzzle-shape"><div class="shape-triangle border-b-blue-500"></div></div>`,
+                    `<div class="puzzle-shape"></div>`
+                ],
+                correctAnswer: 1 // R1=Rosso, R2=Blu. C1=Quadrato, C2=Cerchio.
+            },
+            { // Q 17 (vecchio Q32)
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Quale numero completa la sequenza?</h3><div class="flex items-center justify-center space-x-4 text-3xl font-bold"><span>3</span><span>4</span><span>7</span><span>11</span><span>18</span><span class="text-gray-500">?</span></div>`,
+                optionsHtml: [`<span class="text-3xl">25</span>`, `<span class="text-3xl">27</span>`, `<span class="text-3xl">29</span>`, `<span class="text-3xl">31</span>`, `<span class="text-3xl">33</span>`, `<span class="text-3xl">35</span>`],
+                correctAnswer: 2 // Fibonacci (11 + 18 = 29)
+            },
+            { // Q 18 (vecchio Q33)
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Trova l'intruso:</h3><div class="flex items-center justify-center space-x-4">
+                    <div class="p-2 border border-gray-600 rounded-md w-16 h-16"><div class="shape-square bg-white transform rotate-0"></div></div>
+                    <div class="p-2 border border-gray-600 rounded-md w-16 h-16"><div class="shape-square bg-white transform rotate-45"></div></div>
+                    <div class="p-2 border border-gray-600 rounded-md w-16 h-16"><div class="shape-square bg-white transform rotate-90"></div></div>
+                    <div class="p-2 border border-gray-600 rounded-md w-16 h-16"><div class="shape-square bg-white transform -rotate-90"></div></div>
+                </div>`,
+                optionsHtml: [
+                    `Quadrato 1 (0°)`,
+                    `Quadrato 2 (45°)`, // Corretta
+                    `Quadrato 3 (90°)`,
+                    `Quadrato 4 (-90°)`,
+                    `Nessuno`,
+                    `Tutti`
+                ],
+                correctAnswer: 1 // È un rombo, gli altri sono quadrati (ruotati di 90° sono identici)
+            },
+            // --- 15 NUOVE DOMANDE INIZIANO QUI ---
+            { // Q 19
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Quale numero completa la sequenza?</h3><div class="flex items-center justify-center space-x-4 text-3xl font-bold"><span>2</span><span>3</span><span>5</span><span>7</span><span>11</span><span>13</span><span class="text-gray-500">?</span></div>`,
+                optionsHtml: [`<span class="text-3xl">14</span>`, `<span class="text-3xl">15</span>`, `<span class="text-3xl">16</span>`, `<span class="text-3xl">17</span>`, `<span class="text-3xl">18</span>`, `<span class="text-3xl">19</span>`],
+                correctAnswer: 3 // Numeri primi
+            },
+            { // Q 20
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Quale lettera completa la sequenza?</h3><div class="flex items-center justify-center space-x-4 text-3xl font-bold"><span>A</span><span>C</span><span>F</span><span>J</span><span>O</span><span class="text-gray-500">?</span></div>`,
+                optionsHtml: [`<span class="text-3xl">P</span>`, `<span class="text-3xl">R</span>`, `<span class="text-3xl">S</span>`, `<span class="text-3xl">T</span>`, `<span class="text-3xl">U</span>`, `<span class="text-3xl">V</span>`],
+                correctAnswer: 4 // Logica: +2, +3, +4, +5, +6 -> U
+            },
+            { // Q 21
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Analogia: Orologio : Tempo :: Termometro : ?</h3>`,
+                optionsHtml: [`Caldo`, `Mercurio`, `Gradi`, `Dottore`, `Temperatura`, `Vetro`],
+                correctAnswer: 4 // Misura la temperatura
+            },
+            { // Q 22
+                questionHtml: `<div class="grid grid-cols-3 gap-2 w-48 h-48 md:w-60 md:h-60 mx-auto p-2 bg-gray-700 rounded">
+                    <div class="puzzle-shape"><div class="shape-square bg-white"></div></div>
+                    <div class="puzzle-shape"><div class="shape-square bg-gray-400"></div></div>
+                    <div class="puzzle-shape"><div class="shape-square bg-white"></div></div>
+                    <div class="puzzle-shape"><div class="shape-square bg-gray-400"></div></div>
+                    <div class="puzzle-shape"><div class="shape-square bg-white"></div></div>
+                    <div class="puzzle-shape"><div class="shape-square bg-gray-400"></div></div>
+                    <div class="puzzle-shape"><div class="shape-square bg-white"></div></div>
+                    <div class="puzzle-shape"><div class="shape-square bg-gray-400"></div></div>
+                    <div class="puzzle-shape text-5xl text-gray-500">?</div>
+                </div>`,
+                optionsHtml: [
+                    `<div class="puzzle-shape"><div class="shape-square bg-white"></div></div>`, // Corretta
+                    `<div class="puzzle-shape"><div class="shape-square bg-gray-400"></div></div>`,
+                    `<div class="puzzle-shape"><div class="shape-circle bg-white"></div></div>`,
+                    `<div class="puzzle-shape"><div class="shape-circle bg-gray-400"></div></div>`,
+                    `<div class="puzzle-shape"></div>`,
+                    `<div class="puzzle-shape"><div class="shape-triangle border-b-white"></div></div>`
+                ],
+                correctAnswer: 0 // Alternanza bianco/grigio a scacchiera
+            },
+            { // Q 23
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Quale numero completa la sequenza?</h3><div class="flex items-center justify-center space-x-4 text-3xl font-bold"><span>1</span><span>3</span><span>6</span><span>8</span><span>16</span><span>18</span><span class="text-gray-500">?</span></div>`,
+                optionsHtml: [`<span class="text-3xl">20</span>`, `<span class="text-3xl">24</span>`, `<span class="text-3xl">30</span>`, `<span class="text-3xl">32</span>`, `<span class="text-3xl">36</span>`, `<span class="text-3xl">40</span>`],
+                correctAnswer: 4 // Logica: +2, x2, +2, x2, +2, x2... (18 x 2 = 36)
+            },
+            { // Q 24
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Analogia:</h3><div class="flex items-center justify-center space-x-6">
+                    <div class="flex items-center space-x-2"><div class="w-12 h-12 bg-gray-300 flex items-center justify-center text-gray-900 font-bold text-2xl">A</div> <span class="text-2xl">→</span> <div class="w-12 h-12 bg-gray-300 flex items-center justify-center text-gray-900 font-bold text-2xl">D</div></div>
+                    <div class="text-2xl text-gray-500">::</div>
+                    <div class="flex items-center space-x-2"><div class="w-12 h-12 bg-gray-300 flex items-center justify-center text-gray-900 font-bold text-2xl">E</div> <span class="text-2xl">→</span> <div class="text-4xl text-gray-500">?</div></div>
+                </div>`,
+                optionsHtml: [
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">F</div></div>`,
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">G</div></div>`,
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">H</div></div>`, // Corretta
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">I</div></div>`,
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">J</div></div>`,
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">K</div></div>`
+                ],
+                correctAnswer: 2 // Logica: +3 lettere (A+3=D, E+3=H)
+            },
+            { // Q 25
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Quale numero completa la sequenza?</h3><div class="flex items-center justify-center space-x-4 text-3xl font-bold"><span>100</span><span>97</span><span>94</span><span>91</span><span>88</span><span class="text-gray-500">?</span></div>`,
+                optionsHtml: [`<span class="text-3xl">87</span>`, `<span class="text-3xl">86</span>`, `<span class="text-3xl">85</span>`, `<span class="text-3xl">84</span>`, `<span class="text-3xl">83</span>`, `<span class="text-3xl">82</span>`],
+                correctAnswer: 2 // Logica: -3
+            },
+            { // Q 26
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Trova l'intruso:</h3><div class="flex items-center justify-center space-x-4">
+                    <div class="p-4 border border-gray-600 rounded-md">Mela</div>
+                    <div class="p-4 border border-gray-600 rounded-md">Banana</div>
+                    <div class="p-4 border border-gray-600 rounded-md">Patata</div>
+                    <div class="p-4 border border-gray-600 rounded-md">Ciliegia</div>
+                </div>`,
+                optionsHtml: [`Mela`, `Banana`, `Patata`, `Ciliegia`, `Nessuno`, `Tutti`],
+                correctAnswer: 2 // La patata non è un frutto
+            },
+            { // Q 27
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Quale numero completa la sequenza?</h3><div class="flex items-center justify-center space-x-4 text-3xl font-bold"><span>2</span><span>6</span><span>12</span><span>20</span><span>30</span><span class="text-gray-500">?</span></div>`,
+                optionsHtml: [`<span class="text-3xl">36</span>`, `<span class="text-3xl">40</span>`, `<span class="text-3xl">42</span>`, `<span class="text-3xl">48</span>`, `<span class="text-3xl">50</span>`, `<span class="text-3xl">60</span>`],
+                correctAnswer: 2 // Logica: +4, +6, +8, +10, +12... (30+12 = 42)
+            },
+            { // Q 28
+                questionHtml: `<div class="grid grid-cols-3 gap-2 w-48 h-48 md:w-60 md:h-60 mx-auto p-2 bg-gray-700 rounded">
+                    <div class="puzzle-shape"><div class="w-1/3 h-1/3 bg-white"></div></div>
+                    <div class="puzzle-shape"><div class="w-1/2 h-1/2 bg-white"></div></div>
+                    <div class="puzzle-shape"><div class="w-full h-full bg-white"></div></div>
+                    <div class="puzzle-shape"><div class="w-1/3 h-1/3 bg-white rounded-full"></div></div>
+                    <div class="puzzle-shape"><div class="w-1/2 h-1/2 bg-white rounded-full"></div></div>
+                    <div class="puzzle-shape"><div class="w-full h-full bg-white rounded-full"></div></div>
+                    <div class="puzzle-shape"><div class="w-1/3 h-1/3 bg-white" style="clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div></div>
+                    <div class="puzzle-shape"><div class="w-1/2 h-1/2 bg-white" style="clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div></div>
+                    <div class="puzzle-shape text-5xl text-gray-500">?</div>
+                </div>`,
+                optionsHtml: [
+                    `<div class="puzzle-shape"><div class="w-full h-full bg-white"></div></div>`,
+                    `<div class="puzzle-shape"><div class="w-full h-full bg-white rounded-full"></div></div>`,
+                    `<div class="puzzle-shape"><div class="w-full h-full bg-white" style="clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div></div>`, // Corretta
+                    `<div class="puzzle-shape"><div class="w-1/3 h-1/3 bg-white"></div></div>`,
+                    `<div class="puzzle-shape"></div>`,
+                    `<div class="puzzle-shape"><div class="w-full h-full bg-gray-400"></div></div>`
+                ],
+                correctAnswer: 2 // Logica: R1 Quadrati, R2 Cerchi, R3 Triangoli. C1 Piccolo, C2 Medio, C3 Grande.
+            },
+            { // Q 29
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Quale numero completa la sequenza?</h3><div class="flex items-center justify-center space-x-4 text-3xl font-bold"><span>4</span><span>8</span><span>16</span><span>32</span><span>64</span><span class="text-gray-500">?</span></div>`,
+                optionsHtml: [`<span class="text-3xl">80</span>`, `<span class="text-3xl">96</span>`, `<span class="text-3xl">100</span>`, `<span class="text-3xl">120</span>`, `<span class="text-3xl">128</span>`, `<span class="text-3xl">256</span>`],
+                correctAnswer: 4 // Logica: x2
+            },
+            { // Q 30
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Trova l'intruso:</h3><div class="flex items-center justify-center space-x-4">
+                    <div class="p-4 border border-gray-600 rounded-md">Triangolo</div>
+                    <div class="p-4 border border-gray-600 rounded-md">Quadrato</div>
+                    <div class="p-4 border border-gray-600 rounded-md">Cerchio</div>
+                    <div class="p-4 border border-gray-600 rounded-md">Pentagono</div>
+                </div>`,
+                optionsHtml: [`Triangolo`, `Quadrato`, `Cerchio`, `Pentagono`, `Nessuno`, `Tutti`],
+                correctAnswer: 2 // Il cerchio non ha lati
+            },
+            { // Q 31
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Analogia:</h3><div class="flex items-center justify-center space-x-6">
+                    <div class="flex items-center space-x-2"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">24</div> <span class="text-2xl">→</span> <div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">6</div></div>
+                    <div class="text-2xl text-gray-500">::</div>
+                    <div class="flex items-center space-x-2"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">39</div> <span class="text-2xl">→</span> <div class="text-4xl text-gray-500">?</div></div>
+                </div>`,
+                optionsHtml: [
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">10</div></div>`,
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">12</div></div>`, // Corretta
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">13</div></div>`,
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">18</div></div>`,
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">27</div></div>`,
+                    `<div class="puzzle-shape"><div class="w-12 h-12 bg-white flex items-center justify-center text-gray-900 font-bold text-2xl">30</div></div>`
+                ],
+                correctAnswer: 1 // Logica: somma delle cifre (2+4=6, 3+9=12)
+            },
+            { // Q 32
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Quale lettera completa la sequenza?</h3><div class="flex items-center justify-center space-x-4 text-3xl font-bold"><span>B</span><span>D</span><span>G</span><span>K</span><span>P</span><span class="text-gray-500">?</span></div>`,
+                optionsHtml: [`<span class="text-3xl">S</span>`, `<span class="text-3xl">T</span>`, `<span class="text-3xl">U</span>`, `<span class="text-3xl">V</span>`, `<span class="text-3xl">W</span>`, `<span class="text-3xl">X</span>`],
+                correctAnswer: 4 // Logica: +2, +3, +4, +5, +6... (P+6 = W)
+            },
+            { // Q 33
+                questionHtml: `<h3 class="text-xl text-gray-300 mb-4">Quale numero completa la sequenza?</h3><div class="flex items-center justify-center space-x-4 text-3xl font-bold"><span>9</span><span>16</span><span>25</span><span>36</span><span>49</span><span class="text-gray-500">?</span></div>`,
+                optionsHtml: [`<span class="text-3xl">50</span>`, `<span class="text-3xl">55</span>`, `<span class="text-3xl">60</span>`, `<span class="text-3xl">64</span>`, `<span class="text-3xl">72</span>`, `<span class="text-3xl">81</span>`],
+                correctAnswer: 3 // Quadrati perfetti (8*8 = 64)
+            }
+        ];
+
+        // --- Variabili di Stato (da totale.html) ---
+        let currentQuestionIndex = 0;
+        let score = 0;
+        const totalQuestions = quizData.length;
+
+        // --- Riferimenti DOM (da totale.html) ---
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+
+        const startButton = document.getElementById('start-button');
+        const restartButton = document.getElementById('restart-button');
+
+        const questionNumber = document.getElementById('question-number');
+        const totalQuestionsEl = document.getElementById('total-questions');
+        const currentScoreEl = document.getElementById('current-score');
+        const questionContainer = document.getElementById('question-container');
+        const optionsContainer = document.getElementById('options-container');
+        const resultText = document.getElementById('result-text');
+        const resultFeedback = document.getElementById('result-feedback'); 
+
+        // --- RIFERIMENTI DOM PER LA MUSICA (AGGIUNTI da musicale.html) ---
+        const backgroundMusic = document.getElementById('background-music');
+        const musicToggleButton = document.getElementById('music-toggle-button');
+        const iconSoundOn = document.getElementById('icon-sound-on');
+        const iconSoundOff = document.getElementById('icon-sound-off');
+
+        // --- Variabile di Stato per la Musica (AGGIUNTA da musicale.html) ---
+        let musicStarted = false; // Flag per avviare la musica solo una volta
+
+
+        // --- Funzioni (da totale.html) ---
+
+        /**
+         * Helper function to map a value from one range to another.
+         * Funzione di utilità per mappare un valore da un intervallo a un altro.
+         */
+        function mapRange(value, inMin, inMax, outMin, outMax) {
+            // Fissa il valore nell'intervallo di input
+            const val = Math.max(inMin, Math.min(inMax, value));
+            return ((val - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
+        }
+
+        /**
+         * Calcola un punteggio "simulato" (NON SCIENTIFICO)
+         * basato sulla percentuale di risposte corrette.
+         */
+        function calculateSimulatedIQ(score, totalQuestions) {
+            const percentage = score / totalQuestions;
+            let iq;
+
+            // Mappatura non-lineare per "simulare" una curva di distribuzione
+            if (score === 0) {
+                iq = 70;
+            } else if (percentage < 0.55) {
+                // Sotto la media (mappato da 15% a 55% -> 70 a 100)
+                iq = mapRange(percentage, 0.15, 0.55, 70, 100);
+            } else {
+                // Sopra la media (mappato da 55% a 95% -> 100 a 135)
+                iq = mapRange(percentage, 0.55, 0.95, 100, 135);
+            }
+
+            // Punteggio perfetto (bonus)
+            if (score === totalQuestions) {
+                iq = 145;
+            }
+
+            // Fissa il punteggio finale tra 70 e 145
+            return Math.round(Math.max(70, Math.min(145, iq)));
+        }
+
+
+        function startGame() {
+            // Attiva l'AudioContext al primo click, se sospeso
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            // --- (AGGIUNTO) AVVIO MUSICA DI SOTTOFONDO (da musicale.html) ---
+            // Avvia la musica solo la prima volta che si preme "Inizia"
+            if (!musicStarted) {
+                backgroundMusic.play().then(() => {
+                    // Se la riproduzione ha successo, aggiorna l'icona
+                    iconSoundOn.classList.remove('hidden');
+                    iconSoundOff.classList.add('hidden');
+                    musicStarted = true; // Imposta il flag
+                }).catch(e => {
+                    // Se fallisce (es. blocco autoplay), lascia l'icona su "OFF"
+                    console.warn("La riproduzione della musica non è riuscita:", e);
+                    iconSoundOn.classList.add('hidden');
+                    iconSoundOff.classList.remove('hidden');
+                });
+            }
+            // --- FINE MODIFICA MUSICA ---
+
+            currentQuestionIndex = 0;
+            score = 0;
+            startScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            totalQuestionsEl.textContent = totalQuestions;
+            currentScoreEl.textContent = score;
+            showQuestion();
+        }
+
+        function showQuestion() {
+            // Pulisci i contenitori
+            questionContainer.innerHTML = '';
+            optionsContainer.innerHTML = '';
+
+            // Carica i dati della domanda corrente
+            const question = quizData[currentQuestionIndex];
+
+            // Aggiorna il progresso
+            questionNumber.textContent = currentQuestionIndex + 1;
+
+            // Mostra il quesito
+            questionContainer.innerHTML = question.questionHtml;
+
+            // Mostra le opzioni
+            question.optionsHtml.forEach((optionHtml, index) => {
+                const optionButton = document.createElement('button');
+                optionButton.type = 'button';
+                optionButton.className = 'option-card bg-gray-700 p-4 rounded-lg border-2 border-gray-600 flex items-center justify-center min-h-[100px] md:min-h-[120px]';
+                optionButton.innerHTML = optionHtml;
+                
+                optionButton.addEventListener('click', () => {
+                    // Chiama la nuova funzione di gestione della risposta
+                    handleAnswerSelection(index, question.correctAnswer);
+                });
+                
+                optionsContainer.appendChild(optionButton);
+            });
+        }
+
+        /**
+         * Nuova funzione per gestire la selezione della risposta,
+         * includendo suoni, highlighting e pausa. (da totale.html)
+         * @param {number} selectedIndex - L'indice dell'opzione cliccata.
+         * @param {number} correctIndex - L'indice della risposta corretta.
+         */
+        function handleAnswerSelection(selectedIndex, correctIndex) {
+            // Disabilita tutti i bottoni
+            const buttons = optionsContainer.querySelectorAll('.option-card');
+            buttons.forEach(button => {
+                button.disabled = true;
+                button.classList.remove('option-card:hover'); // Rimuovi l'effetto hover
+            });
+
+            const isCorrect = (selectedIndex === correctIndex);
+
+            // 1. Riproduci il suono
+            playSound(isCorrect);
+
+            // 2. Aggiorna lo score (se corretto)
+            if (isCorrect) {
+                score++;
+                currentScoreEl.textContent = score;
+            }
+
+            // 3. Evidenzia le risposte
+            const correctButton = buttons[correctIndex];
+            // Stile per la risposta corretta
+            correctButton.classList.remove('bg-gray-700', 'border-gray-600');
+            correctButton.classList.add('bg-green-800', 'border-green-500', 'border-2', 'transform', 'scale-105');
+
+            if (!isCorrect) {
+                // Stile per la risposta errata selezionata dall'utente
+                const selectedButton = buttons[selectedIndex];
+                selectedButton.classList.remove('bg-gray-700', 'border-gray-600');
+                selectedButton.classList.add('bg-red-800', 'border-red-500', 'border-2');
+            }
+
+            // 4. Attendi prima di passare alla domanda successiva
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < totalQuestions) {
+                    showQuestion();
+                } else {
+                    showResults();
+                }
+            }, 1500); // Pausa di 1.5 secondi
+        }
+
+
+        function getDescriptiveResult(score) {
+            const percentage = (score / totalQuestions) * 100;
+            if (percentage < 30) {
+                return "Buon inizio! Questi puzzle richiedono un po' di pratica.";
+            } else if (percentage < 60) {
+                return "Buon risultato! Hai un buon occhio per i pattern.";
+            } else if (percentage < 90) {
+                return "Eccellente! Hai una spiccata abilità nel riconoscere le logiche.";
+            } else {
+                return "Impressionante! Hai risolto con successo anche i quesiti più complessi.";
+            }
+        }
+
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            
+            // 1. Punteggio numerico
+            resultText.textContent = `Il tuo punteggio: ${score} su ${totalQuestions}`;
+            
+            // 2. Feedback descrittivo
+            resultFeedback.textContent = getDescriptiveResult(score);
+
+            // --- NUOVA LOGICA PER PUNTEGGIO SIMULATO E GRAFICO ---
+
+            // 3. Calcola e mostra punteggio simulato
+            const simulatedIQ = calculateSimulatedIQ(score, totalQuestions);
+            const simulatedIQScoreEl = document.getElementById('simulated-iq-score');
+            simulatedIQScoreEl.textContent = simulatedIQ;
+
+            // 4. Aggiorna la Campana di Gauss
+            const markerLine = document.getElementById('marker-line');
+            const markerText = document.getElementById('marker-text');
+
+            // Mappa il punteggio IQ (range 70-130) sulla posizione X dell'SVG (range 15-85)
+            let markerX = mapRange(simulatedIQ, 70, 130, 15, 85);
+            
+            // Fissa i limiti per non far uscire il marker dal grafico
+            markerX = Math.max(10, Math.min(90, markerX));
+
+            // Applica la posizione X al marker (linea e testo)
+            markerLine.setAttribute('x1', markerX);
+            markerLine.setAttribute('x2', markerX);
+            markerText.setAttribute('x', markerX);
+            markerText.textContent = simulatedIQ;
+        }
+
+        // --- Event Listeners (da totale.html) ---
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', startGame);
+
+        // --- (AGGIUNTO) EVENT LISTENER PER IL TOGGLE DELLA MUSICA (da musicale.html) ---
+        if (musicToggleButton) {
+            musicToggleButton.addEventListener('click', () => {
+                if (backgroundMusic.paused) {
+                    backgroundMusic.play();
+                    iconSoundOn.classList.remove('hidden');
+                    iconSoundOff.classList.add('hidden');
+                    musicStarted = true; // Assicura che lo stato sia "avviato"
+                } else {
+                    backgroundMusic.pause();
+                    iconSoundOn.classList.add('hidden');
+                    iconSoundOff.classList.remove('hidden');
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>
